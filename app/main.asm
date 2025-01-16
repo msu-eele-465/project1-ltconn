@@ -77,14 +77,21 @@
 
 RESET       mov.w   #__STACK_END,SP         ; Initialize stack pointer
 StopWDT     mov.w   #WDTPW+WDTHOLD,&WDTCTL  ; Stop WDT
+
 SetupP1     bic.b   #BIT0,&P1OUT            ; Clear P1.0 output
             bis.b   #BIT0,&P1DIR            ; P1.0 output
-            bic.w   #LOCKLPM5,&PM5CTL0       ; Unlock I/O pins
+SetupP2      bic.b   #BIT6,&P6OUT            ; Clear P6.6 output
+            bis.b   #BIT6,&P6DIR            ; P6.6 output       
 
-Mainloop    xor.b   #BIT0,&P1OUT            ; Toggle P1.0 every 0.1s
-Wait        mov.w   #50000,R15              ; Delay to R15
-L1          dec.w   R15                     ; Decrement R15
-            jnz     L1                      ; Delay over?
+            bic.w   #LOCKLPM5,&PM5CTL0      ; Unlock I/O pins
+
+Mainloop    xor.b   #BIT0,&P1OUT            ; Toggle P1.0 every 1s
+Wait1       mov.w  #5, R14                  ; Outer delay to R14
+Wait2       mov.w   #50000,R15              ; Inner delay to R15
+L2          dec.w   R15                     ; Decrement R15
+            jnz     L2                      ; Delay over?
+            dec.w   R14                     ; Decrement R14
+            jnz     Wait2                   ; Delay over?
             jmp     Mainloop                ; Again
             NOP
 ;------------------------------------------------------------------------------
@@ -93,3 +100,5 @@ L1          dec.w   R15                     ; Decrement R15
             .sect   RESET_VECTOR            ; MSP430 RESET Vector
             .short  RESET                   ;
             .end
+
+            
